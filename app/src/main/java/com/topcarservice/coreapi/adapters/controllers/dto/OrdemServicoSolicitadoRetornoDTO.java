@@ -18,5 +18,6 @@ public class OrdemServicoSolicitadoRetornoDTO {
 	Long codigoServico;
 	String nome;
 	BigDecimal valorMaoDeObra;
+	Long tempoExecucaoPrevisto;
 
 }
