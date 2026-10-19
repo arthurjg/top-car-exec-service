@@ -28,10 +28,12 @@ public class OrdemServicoAprovadaKafkaConsumer {
 	
 	private final FilaExecucaoServicosUseCase filaExecucaoServicosUseCase;
 	
+	private final OrdemServicoFinalizadaKafkaProducer ordemServicoProducer;
+	
 	@KafkaListener(topics = ORDEM_SERVICO_ATUALIZADA_TOPIC, groupId = "${spring.kafka.consumer.group-id}")
 	public void recebeEventoOSAprovada(OrdemServicoRetornoDTO ordemServicoDTO) {
 		
-		log.info("Ordem Serviço aprovada recebida no tópico: {}.", ordemServicoDTO.getCodigo());
+		log.info("Ordem Serviço atualizada recebida no tópico: {}.", ordemServicoDTO.getCodigo());
 		
 		if(!ordemServicoDTO.getStatus().equals(StatusOrdemServico.EM_EXECUCAO.getDescricao())) {
 			log.info("Ordem de serviço {} não está em execução. Nenhuma ação será tomada.", ordemServicoDTO.getCodigo());
@@ -44,9 +46,13 @@ public class OrdemServicoAprovadaKafkaConsumer {
 			servicoExecucaoUseCase.cadastrar(servico);
 		});		
 		
+		log.info("Execução de Serviço enviada para a fila.");
+		
 		filaExecucaoServicosUseCase.adicionarServicos(servicos);
 		
-		log.info("Execução de Serviço enviada para a fila.");	
+		ordemServicoProducer.sendOSAtualizadaEvent(ordemServicoDTO);
+		
+		log.info("Ordem de serviço {} finalizada enviada para o tópico.", ordemServicoDTO.getCodigo());			
 		
 	}
 

@@ -1,7 +1,6 @@
 package com.topcarservice.coreapi.domain.usecases;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -10,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.topcarservice.coreapi.domain.entities.ServicoExecucaoEntity;
 import com.topcarservice.coreapi.domain.entities.StatusExecucaoServico;
+import com.topcarservice.coreapi.infra.kafka.OrdemServicoFinalizadaKafkaProducer;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,9 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 public class FilaExecucaoServicosUseCase {
 	
 	private ServicoExecucaoUseCase servicoExecucaoUseCase;	
-	private ExecutorService executorFilaServicos;
+	private ExecutorService executorFilaServicos;	
 	
-	public FilaExecucaoServicosUseCase(ServicoExecucaoUseCase servicoExecucaoUseCase) {
+	public FilaExecucaoServicosUseCase(ServicoExecucaoUseCase servicoExecucaoUseCase,
+			OrdemServicoFinalizadaKafkaProducer ordemServicoProducer) {
 		super();
 		this.servicoExecucaoUseCase = servicoExecucaoUseCase;
 		this.executorFilaServicos = Executors.newFixedThreadPool(5);
@@ -44,8 +45,7 @@ public class FilaExecucaoServicosUseCase {
 					log.info("aguardando serviço...");
 					Thread.sleep(servico.getTempoExecucao());
 					log.info("...serviço finalizado");
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
+				} catch (InterruptedException e) {					
 					e.printStackTrace();
 				}
 				
@@ -62,19 +62,12 @@ public class FilaExecucaoServicosUseCase {
 		
 		try {
 			resultado.get();
-			log.info("Serviços finalizados com sucesso.");
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+			log.info("Serviços finalizados com sucesso.");			
+			
+		} catch (Exception e) {			
 			e.printStackTrace();
 			log.error("Erro ao executar Serviços.");
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			log.error("Erro ao executar Serviços.");
-		}
-		
-		//TODO os finalizada execucao
-		
+		}				
 	}
 	
 	
