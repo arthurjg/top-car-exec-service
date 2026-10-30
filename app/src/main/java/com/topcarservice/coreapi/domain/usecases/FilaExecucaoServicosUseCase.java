@@ -1,9 +1,12 @@
 package com.topcarservice.coreapi.domain.usecases;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.springframework.stereotype.Service;
 
@@ -28,7 +31,7 @@ public class FilaExecucaoServicosUseCase {
 		this.executorFilaServicos = Executors.newFixedThreadPool(5);
 	}	
 	
-	public void adicionarServicos(List<ServicoExecucaoEntity> servicos) {
+	public void adicionarServicos(List<ServicoExecucaoEntity> servicos) throws Exception {
 		
 		
 		Future<Boolean> resultado =  executorFilaServicos.submit(() -> {
@@ -42,7 +45,7 @@ public class FilaExecucaoServicosUseCase {
 				servicoExecucaoUseCase.cadastrar(servico);
 				
 				try {
-					log.info("aguardando serviço...");
+					log.info("aguardando execução do serviço...");
 					Thread.sleep(servico.getTempoExecucao());
 					log.info("...serviço finalizado");
 				} catch (InterruptedException e) {					
@@ -60,14 +63,18 @@ public class FilaExecucaoServicosUseCase {
 			return true;
 		});
 		
+		
 		try {
-			resultado.get();
-			log.info("Serviços finalizados com sucesso.");			
+			resultado.get(100, TimeUnit.MILLISECONDS);
+		} catch (Exception e) {
+			String message = "Erro ao executar serviço, mecanico demorou para iniciar...";
+			log.error(message);
+			throw new Exception(message);			
+		}	
+		
+		log.info("Serviços finalizados com sucesso.");			
 			
-		} catch (Exception e) {			
-			e.printStackTrace();
-			log.error("Erro ao executar Serviços.");
-		}				
+					
 	}
 	
 	

@@ -30,6 +30,8 @@ public class OrdemServicoAprovadaKafkaConsumer {
 	
 	private final OrdemServicoFinalizadaKafkaProducer ordemServicoProducer;
 	
+	private final OrdemServicoAprovacaoDesfazerKafkaProducer oSAprovacaoDesfazerKafkaProducer;	
+	
 	@KafkaListener(topics = ORDEM_SERVICO_ATUALIZADA_TOPIC, groupId = "${spring.kafka.consumer.group-id}")
 	public void recebeEventoOSAprovada(OrdemServicoRetornoDTO ordemServicoDTO) {
 		
@@ -48,11 +50,17 @@ public class OrdemServicoAprovadaKafkaConsumer {
 		
 		log.info("Execução de Serviço enviada para a fila.");
 		
-		filaExecucaoServicosUseCase.adicionarServicos(servicos);
-		
-		ordemServicoProducer.sendOSAtualizadaEvent(ordemServicoDTO);
-		
-		log.info("Ordem de serviço {} finalizada enviada para o tópico.", ordemServicoDTO.getCodigo());			
+		try {
+			filaExecucaoServicosUseCase.adicionarServicos(servicos);
+			
+			ordemServicoProducer.sendOSAtualizadaEvent(ordemServicoDTO);
+			
+			log.info("Ordem de serviço {} finalizada enviada para o tópico.", ordemServicoDTO.getCodigo());	
+		} catch (Exception e) {
+			log.error("Erro ao iniciar execução do serviço: {}. Revertendo aprovação", e.getMessage());
+			
+			oSAprovacaoDesfazerKafkaProducer.sendOSAprovacaoDesfazerEvent(ordemServicoDTO);
+		}				
 		
 	}
 
