@@ -1,12 +1,10 @@
 package com.topcarservice.coreapi.domain.usecases;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.springframework.stereotype.Service;
 
@@ -61,8 +59,7 @@ public class FilaExecucaoServicosUseCase {
 			});
 			
 			return true;
-		});
-		
+		});		
 		
 		try {
 			resultado.get(100, TimeUnit.MILLISECONDS);
@@ -70,18 +67,7 @@ public class FilaExecucaoServicosUseCase {
 			String message = "Erro ao executar serviço, mecanico demorou para iniciar...";
 			log.error(message);
 			throw new Exception(message);			
-		}	
-		
-		log.info("Serviços finalizados com sucesso.");			
-			
-					
+		}			
+		log.info("Serviços finalizados com sucesso.");						
 	}
-	
-	
-	
-	
-	
-
-	
-
 }

@@ -8,13 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @Builder
 public class OrdemServicoPecaInsumoSolicitadoDTO {
-	
+
 	Long codigoPecaInsumo;
 	String nome;
 	Integer quantidade;
@@ -22,3 +23,4 @@ public class OrdemServicoPecaInsumoSolicitadoDTO {
 	BigDecimal valorTotal;
 
 }
+ 
