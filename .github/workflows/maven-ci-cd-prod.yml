@@ -72,7 +72,7 @@ jobs:
       - name: Build the Docker image
         run: |
           mvn -B package --file app/pom.xml
-          docker build . --file Dockerfile --env=ENV=prod --tag ${{ env.APP_NAME }}:$(date +%s)
+          docker build . --file Dockerfile --build-arg ENV=prod --tag ${{ env.APP_NAME }}:$(date +%s)
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
