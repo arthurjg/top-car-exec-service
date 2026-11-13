@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment
+  labels:
+    app: top-car-service-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: top-car-service-db
+  template:
+    metadata:
+      labels:
+        app: top-car-service-db
+    spec:
+      containers:
+      - name: top-car-postgres-db
+        image: postgres:15-alpine        
+        ports:
+        - containerPort: 5432
+        env:        
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-db-credentials
+              key: db-username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-db-credentials
+              key: db-password
+        envFrom:        
+        - configMapRef:
+            name: app-settings

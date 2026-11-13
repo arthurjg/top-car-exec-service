@@ -2,30 +2,26 @@ package com.topcarservice.coreapi.domain.entities;
 
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
-@Getter
-@Setter
-@Entity
-@Table(name = "servico_execucao")
+@DynamoDbBean
 public class ServicoExecucaoEntity {
 	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)	
+	@Setter
 	private Long codigo;	
 	
 	private Long codigoOdemServico;	
 	
+	@Getter
+	@Setter
 	private StatusExecucaoServico status;	
 	
 	private String descricao;	
 	
+	@Getter
 	private Long tempoExecucao;	
 	
 	private LocalDateTime dataAbertura;
@@ -44,6 +40,13 @@ public class ServicoExecucaoEntity {
 		this.codigoOdemServico = codigoOdemServico;
 		this.descricao = descricao;
 		this.tempoExecucao = tempoExecucao;
+	}
+
+	@DynamoDbPartitionKey
+	public Long getCodigo() {
+		return codigo;
 	}	
+	
+	
 
 }
