@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels:
+    app: top-car-service-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: top-car-service-app
+  template:
+    metadata:
+      labels:
+        app: top-car-service-app
+    spec:
+      containers:      
+      - name: top-car-service
+        image: top-car-service-app:latest
+        imagePullPolicy: Never               
+        ports:
+        - containerPort: 8082
+        env:        
+        - name: DATABASE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: app-db-credentials
+              key: db-username
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-db-credentials
+              key: db-password        
+        - name: DATABASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-settings
+              key: DATABASE_URL

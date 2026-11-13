@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: top-car-exec-service-svc
+  labels:
+    app: top-car-exec-service-app
+spec:
+  type: ClusterIP
+  selector:
+    app: top-car-exec-service-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8082
