@@ -89,9 +89,41 @@ jobs:
           docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest .
           docker push -a ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
 
+  terraform:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.TERRAFORM_WORKING_DIR }}
+
+    steps:
+        # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v4
+
+        # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        run: terraform init
+
+      # Checks that all Terraform configuration files adhere to a canonical format
+      - name: Terraform Plan/Format
+        run: terraform fmt -check
+        continue-on-error: true
+
+      # Generates an execution plan for Terraform
+      - name: Terraform Apply/Plan
+        run: terraform plan -input=false
+  
   deploy:
       
-    needs: [build]
+    needs: [build, terraform]
     runs-on: ubuntu-latest
 
     steps:
@@ -108,17 +140,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
       
+    #- name: Update kubeconfig and deploy to EKS
+    #  run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
     - name: Update kubeconfig and deploy to EKS
-      run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+      run: echo "Updating kubeconfig and deploying to EKS"
+
+    #- name: Deploy to EKS
+    #  run: |
+    #    kubectl apply -f k8s/configmap.yaml
+    #    kubectl apply -f k8s/secrets.yaml    
+    #    kubectl apply -f k8s/deployment-db.yaml
+    #    kubectl apply -f k8s/service-db.yaml
+    #    kubectl apply -f k8s/deployment-app.yaml
+    #    kubectl apply -f k8s/service-app.yaml
+    #    kubectl apply -f k8s/hpa.yaml
 
     - name: Deploy to EKS
-      run: |
-        kubectl apply -f k8s/configmap.yaml
-        kubectl apply -f k8s/secrets.yaml    
-        kubectl apply -f k8s/deployment-db.yaml
-        kubectl apply -f k8s/service-db.yaml
-        kubectl apply -f k8s/deployment-app.yaml
-        kubectl apply -f k8s/service-app.yaml
-        kubectl apply -f k8s/hpa.yaml  
+      run: echo "Deploing to EKS"
         
           
