@@ -6,11 +6,13 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Java CI with Maven - Feature
+name: Java CI/CD with Maven - Homolog
 
-on:  
-  push:
-    branches: [ "feature/*" ]
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+    branches:
+      - develop
 
 permissions:
   contents: read
@@ -19,18 +21,22 @@ env:
   APP_NAME: top-car-exec-service
   AWS_REGION: us-east-1                   
   ECR_REPOSITORY: top-car-service/top-car-exec-service
-  EKS_CLUSTER_NAME: top-car-eks
+  EKS_CLUSTER_NAME: top-car-eks-cluster
+  TERRAFORM_WORKING_DIR: infra
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
 jobs:
+
   build:
     name: Build and Analyze
 
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-        with:
+        with:          
           fetch-depth: 0
 
       - name: Set up JDK 21
@@ -55,12 +61,12 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-    
+
       - name: Build and Analyze with SonarQube
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify --file app/pom.xml org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=arthurjg_${{ env.APP_NAME }}
-    
+
       - name: Build the Docker image
         run: |
           mvn -B package --file app/pom.xml
@@ -69,15 +75,16 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            aws-region: ${{ env.AWS_REGION }}
-            
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - uses: aws-actions/amazon-ecr-login@v2
         id: login-ecr
-    
+
       - name: Build and Push docker image to Amazon ECR
         run: |
           docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest .
-          docker push -a ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }} 
+          docker push -a ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
+        
           
