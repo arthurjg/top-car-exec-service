@@ -3,20 +3,27 @@ package com.topcarservice.coreapi.domain.usecases;
 import static org.assertj.core.api.Assertions.fail;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.topcarservice.coreapi.domain.entities.ServicoExecucaoEntity;
 
-@Disabled
-@SpringBootTest
-class FilaExecucaoServicosUseCaseITTest {
+@ExtendWith(MockitoExtension.class)
+class FilaExecucaoServicosUseCaseITTest {	
 	
-	@Autowired
+	@InjectMocks	
 	FilaExecucaoServicosUseCase useCase;
+	
+	@Mock
+	ServicoExecucaoUseCase servicoExecucaoUseCase;	
+	
+	@Mock
+	ExecutorService executorFilaServicos;
 
 	@Test
 	void testAdicionarServicosSucesso() {
