@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 env:
-  APP_NAME: top-car-billing-service
+  APP_NAME: top-car-exec-service
   AWS_REGION: us-east-1                   
   ECR_REPOSITORY: top-car-service/top-car-exec-service
   EKS_CLUSTER_NAME: top-car-eks-cluster
@@ -89,37 +89,36 @@ jobs:
           docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest .
           docker push -a ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}
 
-
-  terraform:
+  deploy:
+      
+    needs: [build]
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{ env.TERRAFORM_WORKING_DIR }}
-
     steps:
-        # Checkout the repository to the GitHub Actions runner
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout source code
+      uses: actions/checkout@v4
+      with:
+          ref: main
+          fetch-depth: 0
 
-        # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+    - name: Update kubeconfig and deploy to EKS
+      run: aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
-      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-      - name: Terraform Init
-        run: terraform init
-
-      # Checks that all Terraform configuration files adhere to a canonical format
-      - name: Terraform Plan/Format
-        run: terraform fmt -check
-        continue-on-error: true
-
-      # Generates an execution plan for Terraform
-      - name: Terraform Apply/Plan
-        run: terraform plan -input=false
+    - name: Deploy to EKS
+      run: |
+        kubectl apply -f k8s/configmap.yaml
+        kubectl apply -f k8s/secrets.yaml    
+        kubectl apply -f k8s/deployment-db.yaml
+        kubectl apply -f k8s/service-db.yaml
+        kubectl apply -f k8s/deployment-app.yaml
+        kubectl apply -f k8s/service-app.yaml
+        kubectl apply -f k8s/hpa.yaml  
         
           
