@@ -11,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.topcarservice.coreapi.domain.entities.ServicoExecucaoEntity;
 
-@Disabled
 @SpringBootTest
 class FilaExecucaoServicosUseCaseITTest {
 	
